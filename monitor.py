@@ -45,6 +45,8 @@ class MyEventHandler(pyinotify.ProcessEvent):
                                     event.pathname)
             self.active_new_files.pop(event.pathname)
             logger.info('Sending for processing: %s', event.pathname)
+            ## Good idea to  test called code in single threaded mode first,
+            ## since exceptions do not propagate back from subprocesses.
 #            summary = process_rawfile(event.pathname)
 #            processed_callback(summary)
             self.pool.apply_async(process_rawfile,
@@ -80,20 +82,6 @@ notifier = pyinotify.Notifier(wm, handler)
 mask = pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE
 wm.add_watch(watchdir, mask, rec=True)
 
-#notifier.loop()
 logger.info("Watching %s ...", watchdir)
-#Check / Process loop
-while True:
-#    logging.debug("Waiting...")
-    notifier.process_events()
-    while notifier.check_events(timeout=0.1):  #loop in case more events appear while we are processing
-        notifier.read_events()
-        notifier.process_events()
-#    while len(handler.q) > handler.pool._processes:
-#        job = handler.q.popleft()
-#        result = job.get(timeout=600)
-#        logger.info(result)
-##    logging.debug("Sleeping...")
-    time.sleep(0.5)
-
+notifier.loop()
 
