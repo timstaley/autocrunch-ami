@@ -23,7 +23,7 @@ def process_dataset(groups):
     print "Hello world"
     print "Processing ", groups
     listings = ami.process_data_groups(groups, default_output_dir, default_ami_dir)
-    drivecasa.process_data_listing(listings, default_output_dir, default_casa_dir)
+    drivecasa.process_groups(listings, default_output_dir, default_casa_dir)
     return "Done"
 
 def split_into_single_file_listings(groups_list):
