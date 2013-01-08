@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import pyinotify
 import sys
 import multiprocessing
@@ -12,7 +13,7 @@ from collections import deque
 import ami
 import drivecasa
 
-logging.basicConfig(format='%(name)s:%(levelname)s:%(message)s',
+logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
                         level=logging.INFO)
 
 logger = logging.getLogger()
@@ -22,10 +23,10 @@ logger = logging.getLogger()
 #log_stdout.setLevel(logging.INFO)
 #logger.addHandler(log_stdout)
 
-watchdir = '/home/ts3e11/test/data'
+watchdir = '/opt/ami/LA/data'
 default_output_dir = os.path.expanduser("/home/ts3e11/ami_results")
-default_ami_dir = "/data1/ami"
-default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-33.0.16856-002-64b')
+default_ami_dir = '/opt/ami'
+default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-34.0.19988-002-64b')
 nthreads = 4
 
 
@@ -36,25 +37,27 @@ class MyEventHandler(pyinotify.ProcessEvent):
         self.q = deque()
 
     def process_IN_CREATE(self, event):
-        logger.debug("File transfer started: %s\n", event.pathname)
-        self.active_new_files[event.pathname] = None
+#	if os.path.splitext(event.pathname)[-1] == '.raw':
+    	if '.raw' in event.pathname:
+            logger.debug("RawFile transfer started: %s\n", event.pathname)
+            self.active_new_files[event.pathname] = None
 
     def process_IN_CLOSE_WRITE(self, event):
         if event.pathname in self.active_new_files:
-            logger.debug('New file transfer finished: %s\n' %
+            logger.debug('New rawfile transfer finished: %s\n' %
                                     event.pathname)
             self.active_new_files.pop(event.pathname)
             logger.info('Sending for processing: %s', event.pathname)
             ## Good idea to  test called code in single threaded mode first,
             ## since exceptions do not propagate back from subprocesses.
-#            summary = process_rawfile(event.pathname)
-#            processed_callback(summary)
-            self.pool.apply_async(process_rawfile,
-                                  [event.pathname],
-                                  callback=processed_callback)
+            summary = process_rawfile(event.pathname)
+            processed_callback(summary)
+#            self.pool.apply_async(process_rawfile,
+#                                  [event.pathname],
+#                                  callback=processed_callback)
 
         else:
-            logger.debug("Old file modified: %s\n" % event.pathname)
+            logger.debug("File modified: %s\n" % event.pathname)
 
 
 def process_rawfile(filename):

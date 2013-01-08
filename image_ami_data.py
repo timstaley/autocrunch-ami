@@ -2,36 +2,38 @@ import os
 import logging
 import sys
 import multiprocessing
-
 import ami
 import drivecasa
 
-test_groups = {
-       "test_crunch1": {
-            "files": [
-                "SWIFT_540255-121207.raw",
-                "SWIFT_540255-121209.raw"
-            ]
-        }
-    }
+#logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+#                        level=logging.INFO)
 
-default_output_dir = os.path.expanduser("~/ami_results")
-default_ami_dir = "/data1/ami"
-default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-33.0.16856-002-64b')
+watchdir = '/opt/ami/LA/data'
+default_output_dir = os.path.expanduser("/home/ts3e11/ami_results")
+#default_ami_dir = '/opt/ami'    
+default_ami_dir = '/opt/ami'
+default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-34.0.19988-002-64b')
+nthreads = 4
 
-def process_dataset(groups):
-    print "Hello world"
-    print "Processing ", groups
-    listings = ami.process_data_groups(groups, default_output_dir, default_ami_dir)
-    drivecasa.process_groups(listings, default_output_dir, default_casa_dir)
-    return "Done"
+def process_rawfile(filename):
+    rawfile = os.path.basename(filename)
+    reduce = ami.Reduce(default_ami_dir)
+    groupname = rawfile.split('-')[0]
+    group_dir = os.path.join(default_output_dir, groupname)
+    ami_output_dir = os.path.join(group_dir, 'ami')
+    try:
+        obs_info = ami.process_rawfile(rawfile, ami_output_dir, reduce)
+#        drivecasa.process_observation(obs_info, group_dir, default_casa_dir)
+    except (IOError, ValueError) as e:
+        error_message = ("Hit exception reducing file: %s, exception reads:\n%s"
+                         % (rawfile, e.message))
+        return error_message
 
-def split_into_single_file_listings(groups_list):
-    single_listings = []
-    for grp in groups_list.keys():
-        for file in groups_list[grp]['files']:
-            single_listings.append({grp:{'files':[file]}})
-    return single_listings
+    return ("Successfully processed %s \n Rain: %d \n"  
+            % (filename,obs_info[ami.keys.rain]))
+
+def processed_callback(summary):
+    logger.info('*** Job complete: ' + summary)
 
 
 if __name__ == "__main__":
@@ -46,10 +48,10 @@ if __name__ == "__main__":
     pool = multiprocessing.Pool(2)
 #    process_dataset(test_groups)
 #    result = pool.apply_async(process_dataset, [test_groups])
-    single_file_listings = split_into_single_file_listings(test_groups)
-    for listing in single_file_listings:
-        result = pool.apply_async(process_dataset, [listing])
-    print result.get(timeout=1200)
+    process_rawfile('SWIFT_541371-121212.raw')
+#    for listing in single_file_listings:
+#        result = pool.apply_async(process_dataset, [listing])
+#    print result.get(timeout=1200)
     print "Fin."
 
 
