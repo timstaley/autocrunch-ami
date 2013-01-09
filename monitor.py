@@ -133,6 +133,7 @@ if __name__ == '__main__':
     shandler.setLevel(logging.INFO)
 
     logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
     logger.addHandler(fhandler)
     logger.addHandler(shandler)
     logger.addHandler(dhandler)
