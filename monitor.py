@@ -19,8 +19,34 @@ class options():
     ami = "/home/djt/ami"
     casa = '/opt/soft/builds/casapy-active'
     output_dir = "/home/ts3e11/ami_results"
-    log_dir = '/tmp/autocruncher'
+#    log_dir = '/tmp/autocruncher'
+    log_dir = output_dir
     nthreads = 6
+
+def main(options):
+    watchdir = os.path.join(options.ami, 'LA/data')
+
+    wm = pyinotify.WatchManager()
+    pool = multiprocessing.Pool(options.nthreads)
+
+    def asynchronously_process_rawfile(file_path, mp_pool):
+#    summary = process_rawfile(file_path)
+#    processed_callback(summary)
+        mp_pool.apply_async(process_rawfile,
+              [file_path, options.ami, options.casa, options.output_dir],
+              callback=processed_callback)
+
+    bound_asyncprocessor = partial(asynchronously_process_rawfile, mp_pool=pool)
+    handler = RsyncNewFileHandler(nthreads=options.nthreads,
+                                  file_predicate=is_rawfile,
+                                  file_processor=bound_asyncprocessor)
+
+    notifier = pyinotify.Notifier(wm, handler)
+
+    wm.add_watch(watchdir, handler.mask, rec=True)
+    log_preamble(options, watchdir)
+    notifier.loop()
+    return 0
 
 
 def is_rawfile(filename):
@@ -79,29 +105,7 @@ class RsyncNewFileHandler(pyinotify.ProcessEvent):
             logger.info('Sending for processing: %s', event.pathname)
             self.process(event.pathname)
 
-
-def main(options):
-    watchdir = os.path.join(options.ami, 'LA/data')
-
-    wm = pyinotify.WatchManager()
-    pool = multiprocessing.Pool(options.nthreads)
-
-    def asynchronously_process_rawfile(file_path, mp_pool):
-#    summary = process_rawfile(file_path)
-#    processed_callback(summary)
-        mp_pool.apply_async(process_rawfile,
-              [file_path, options.ami, options.casa, options.output_dir],
-              callback=processed_callback)
-
-    bound_asyncprocessor = partial(asynchronously_process_rawfile, mp_pool=pool)
-    handler = RsyncNewFileHandler(nthreads=options.nthreads,
-                                  file_predicate=is_rawfile,
-                                  file_processor=bound_asyncprocessor)
-
-    notifier = pyinotify.Notifier(wm, handler)
-
-    wm.add_watch(watchdir, handler.mask, rec=True)
-
+def log_preamble(options, watchdir):
     logger.info("***********")
     logger.info('Watching %s', watchdir)
     logger.info('Ami dir %s', options.ami)
@@ -109,15 +113,14 @@ def main(options):
     logger.info('Ouput dir %s', options.output_dir)
     logger.info('Log dir %s', options.log_dir)
     logger.info("***********")
-    notifier.loop()
-    return 0
 
-if __name__ == '__main__':
+def setup_logging(options):
     if not os.path.isdir(options.log_dir):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
-    std_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-    debug_formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
+    date_fmt = "%a %d %H:%M:%S"
+    std_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s', date_fmt)
+    debug_formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s', date_fmt)
 
     fhandler = logging.handlers.RotatingFileHandler(log_filename,
                             maxBytes=5e5, backupCount=10)
@@ -138,4 +141,7 @@ if __name__ == '__main__':
     logger.addHandler(shandler)
     logger.addHandler(dhandler)
 
+
+if __name__ == '__main__':
+    setup_logging(options)
     sys.exit(main(options))
