@@ -119,7 +119,7 @@ if __name__ == '__main__':
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
     log_fhandler = logging.handlers.RotatingFileHandler(log_filename,
-                            maxBytes=500, backupCount=10)
+                            maxBytes=5e5, backupCount=10)
     log_fhandler.setFormatter(
                   logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
     logging.getLogger().addHandler(log_fhandler)
