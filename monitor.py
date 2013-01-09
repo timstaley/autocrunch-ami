@@ -84,7 +84,7 @@ def main(options):
     watchdir = os.path.join(options.ami, 'LA/data')
 
     wm = pyinotify.WatchManager()
-    pool = multiprocessing.Pool(4)
+    pool = multiprocessing.Pool(options.nthreads)
 
     def asynchronously_process_rawfile(file_path, mp_pool):
 #    summary = process_rawfile(file_path)
@@ -114,7 +114,7 @@ def main(options):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
-                        level=logging.INFO)
+                        level=logging.DEBUG)
     if not os.path.isdir(options.log_dir):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
