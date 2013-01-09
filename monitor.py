@@ -119,6 +119,7 @@ if __name__ == '__main__':
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
     log_fhandler = logging.handlers.RotatingFileHandler(log_filename,
-                            maxBytes=500, backupCount=10)
+                            maxBytes=500, backupCount=10,
+                            format='%(asctime)s:%(levelname)s:%(message)s')
     logging.getLogger().addHandler(log_fhandler)
     sys.exit(main(options))

@@ -5,14 +5,16 @@ import multiprocessing
 import ami
 import drivecasa
 
-#logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
-#                        level=logging.INFO)
+logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+                        level=logging.DEBUG)
 
-watchdir = '/opt/ami/LA/data'
-default_output_dir = os.path.expanduser("/home/ts3e11/ami_results")
+#watchdir = '/opt/ami/LA/data'
 #default_ami_dir = '/opt/ami'    
-default_ami_dir = '/opt/ami'
-default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-34.0.19988-002-64b')
+#default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-34.0.19988-002-64b')
+default_output_dir = os.path.expanduser("/home/ts3e11/ami_results")
+default_ami_dir = '/data1/ami'
+watchdir = '/data1/ami/LA/data'
+default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-33.0.16856-002-64b')
 nthreads = 4
 
 def process_rawfile(filename):
@@ -29,8 +31,8 @@ def process_rawfile(filename):
                          % (rawfile, e.message))
         return error_message
 
-    return ("Successfully processed %s \n Rain: %d \n"  
-            % (filename,obs_info[ami.keys.rain]))
+    return ("Successfully processed %s \n Rain: %d \n"
+            % (filename, obs_info[ami.keys.rain]))
 
 def processed_callback(summary):
     logger.info('*** Job complete: ' + summary)
