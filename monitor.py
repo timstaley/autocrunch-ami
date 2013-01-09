@@ -113,23 +113,23 @@ def main(options):
     return 0
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
-                        level=logging.DEBUG)
     if not os.path.isdir(options.log_dir):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
-    file_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+    std_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+    debug_formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s')
 
     fhandler = logging.handlers.RotatingFileHandler(log_filename,
                             maxBytes=5e5, backupCount=10)
-    fhandler.setFormatter(file_formatter)
+    fhandler.setFormatter(std_formatter)
     fhandler.setLevel(logging.INFO)
     dhandler = logging.handlers.RotatingFileHandler(log_filename + '.debug',
                             maxBytes=5e5, backupCount=10)
-    dhandler.setFormatter(file_formatter)
+    dhandler.setFormatter(debug_formatter)
     dhandler.setLevel(logging.DEBUG)
 
     shandler = logging.StreamHandler()
+    shandler.setFormatter(std_formatter)
     shandler.setLevel(logging.INFO)
 
     logger = logging.getLogger()
