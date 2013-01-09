@@ -118,9 +118,23 @@ if __name__ == '__main__':
     if not os.path.isdir(options.log_dir):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
-    log_fhandler = logging.handlers.RotatingFileHandler(log_filename,
+    file_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+
+    fhandler = logging.handlers.RotatingFileHandler(log_filename,
                             maxBytes=5e5, backupCount=10)
-    log_fhandler.setFormatter(
-                  logging.Formatter('%(asctime)s:%(levelname)s:%(message)s'))
-    logging.getLogger().addHandler(log_fhandler)
+    fhandler.setFormatter(file_formatter)
+    fhandler.setLevel(logging.INFO)
+    dhandler = logging.handlers.RotatingFileHandler(log_filename + '.debug',
+                            maxBytes=5e5, backupCount=10)
+    dhandler.setFormatter(file_formatter)
+    dhandler.setLevel(logging.DEBUG)
+
+    shandler = logging.StreamHandler()
+    shandler.setLevel(logging.INFO)
+
+    logger = logging.getLogger()
+    logger.addHandler(fhandler)
+    logger.addHandler(shandler)
+    logger.addHandler(dhandler)
+
     sys.exit(main(options))
