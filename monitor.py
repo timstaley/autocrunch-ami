@@ -15,11 +15,12 @@ logger = logging.getLogger()
 
 class options():
     """Dummy class serving as a placeholder for optparse handling."""
-    ami = "/opt/ami"
+#    ami = "/opt/ami"
+    ami = "/home/djt/ami"
     casa = '/opt/soft/builds/casapy-active'
-    output_dir = os.path.expanduser("~/ami_results")
+    output_dir = "/home/ts3e11/ami_results"
     log_dir = '/tmp/autocruncher'
-    nthreads = 4
+    nthreads = 6
 
 
 def is_rawfile(filename):
@@ -81,7 +82,6 @@ class RsyncNewFileHandler(pyinotify.ProcessEvent):
 
 def main(options):
     watchdir = os.path.join(options.ami, 'LA/data')
-    watchdir = '/home/ts3e11/test/data'
 
     wm = pyinotify.WatchManager()
     pool = multiprocessing.Pool(4)
