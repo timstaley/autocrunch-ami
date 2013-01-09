@@ -3,64 +3,46 @@ import pyinotify
 import sys
 import multiprocessing
 import logging
+import logging.handlers
 import time
 import os
+import optparse
 from functools import partial
-
-#logging.basicConfig(format='%(levelname)s:%(message)s',
-#                    level=logging.INFO)
-
 import ami
 import drivecasa
 
-logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
-                        level=logging.INFO)
-
 logger = logging.getLogger()
-#ami.logger.setLevel(logging.WARN)
-#drivecasa.logger.setLevel(logging.WARN)
-#log_stdout = logging.StreamHandler(sys.stdout)
-#log_stdout.setLevel(logging.INFO)
-#logger.addHandler(log_stdout)
 
-watchdir = '/home/ts3e11/test/data'
-default_output_dir = os.path.expanduser("/home/ts3e11/ami_results")
-#default_ami_dir = '/opt/ami'
-default_ami_dir = '/data1/ami'
-#default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-34.0.19988-002-64b')
-default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-33.0.16856-002-64b')
-nthreads = 4
+class options():
+    """Dummy class serving as a placeholder for optparse handling."""
+    ami = "/opt/ami"
+    casa = '/opt/soft/builds/casapy-active'
+    output_dir = os.path.expanduser("~/ami_results")
+    log_dir = '/tmp/autocruncher'
+    nthreads = 4
 
 
-def is_probably_rawfile(filename):
+def is_rawfile(filename):
+    """Predicate function for identifying incoming AMI data"""
     if '.raw' in filename:
         return True
     return False
 
-def process_rawfile(filename):
+def process_rawfile(filename, ami_dir, casa_dir, output_dir):
     rawfile = os.path.basename(filename)
-    reduce = ami.Reduce(default_ami_dir)
+    reduce = ami.Reduce(ami_dir)
     groupname = rawfile.split('-')[0]
-    group_dir = os.path.join(default_output_dir, groupname)
+    group_dir = os.path.join(output_dir, groupname)
     ami_output_dir = os.path.join(group_dir, 'ami')
     try:
         obs_info = ami.process_rawfile(rawfile, ami_output_dir, reduce)
-        drivecasa.process_observation(obs_info, group_dir, default_casa_dir)
+        drivecasa.process_observation(obs_info, group_dir, casa_dir)
     except (IOError, ValueError) as e:
         error_message = ("Hit exception reducing file: %s, exception reads:\n%s\n"
                          % (rawfile, e))
         return error_message
 
     return "Successfully processed " + filename
-
-def asynchronously_process_rawfile(file_path, mp_pool):
-#    summary = process_rawfile(file_path)
-#    processed_callback(summary)
-    mp_pool.apply_async(process_rawfile,
-                          [file_path],
-                          callback=processed_callback)
-
-
 
 def processed_callback(summary):
     logger.info('*** Job complete: ' + summary)
@@ -97,19 +79,46 @@ class RsyncNewFileHandler(pyinotify.ProcessEvent):
             self.process(event.pathname)
 
 
-wm = pyinotify.WatchManager()
+def main(options):
+    watchdir = os.path.join(options.ami, 'LA/data')
+    watchdir = '/home/ts3e11/test/data'
 
-pool = multiprocessing.Pool(4)
-bound_processor = partial(asynchronously_process_rawfile, mp_pool=pool)
+    wm = pyinotify.WatchManager()
+    pool = multiprocessing.Pool(4)
 
-handler = RsyncNewFileHandler(nthreads=nthreads,
-                              file_predicate=is_probably_rawfile,
-                              file_processor=bound_processor)
+    def asynchronously_process_rawfile(file_path, mp_pool):
+#    summary = process_rawfile(file_path)
+#    processed_callback(summary)
+        mp_pool.apply_async(process_rawfile,
+              [file_path, options.ami, options.casa, options.output_dir],
+              callback=processed_callback)
 
-notifier = pyinotify.Notifier(wm, handler)
+    bound_asyncprocessor = partial(asynchronously_process_rawfile, mp_pool=pool)
+    handler = RsyncNewFileHandler(nthreads=options.nthreads,
+                                  file_predicate=is_rawfile,
+                                  file_processor=bound_asyncprocessor)
 
-wm.add_watch(watchdir, handler.mask, rec=True)
+    notifier = pyinotify.Notifier(wm, handler)
 
-logger.info("Watching %s ...", watchdir)
-notifier.loop()
+    wm.add_watch(watchdir, handler.mask, rec=True)
 
+    logger.info("***********")
+    logger.info('Watching %s', watchdir)
+    logger.info('Ami dir %s', options.ami)
+    logger.info('Casa dir %s', options.casa)
+    logger.info('Ouput dir %s', options.output_dir)
+    logger.info('Log dir %s', options.log_dir)
+    logger.info("***********")
+    notifier.loop()
+    return 0
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+                        level=logging.INFO)
+    if not os.path.isdir(options.log_dir):
+        os.makedirs(options.log_dir)
+    log_filename = os.path.join(options.log_dir, 'autocruncher_log')
+    log_fhandler = logging.handlers.RotatingFileHandler(log_filename,
+                            maxBytes=500, backupCount=10)
+    logging.getLogger().addHandler(log_fhandler)
+    sys.exit(main(options))
