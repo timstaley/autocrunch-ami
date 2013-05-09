@@ -1,13 +1,18 @@
-#!/usr/bin/python
-import pyinotify
+#!/usr/bin/env python
+
+"""A working (and used!) example of using pyinotify to trigger data reduction.
+
+A multiprocessing pool of thread workers is used to perform the reduction in
+an asynchronous and parallel fashion.
+"""
 import sys
 import multiprocessing
-import logging
-import logging.handlers
-import time
+import logging, logging.handlers
 import os
 import optparse
 from functools import partial
+import pyinotify
+from autocrunch.watch_handlers import RsyncNewFileHandler
 import ami
 import drivecasa
 
@@ -15,23 +20,24 @@ logger = logging.getLogger()
 
 class options():
     """Dummy class serving as a placeholder for optparse handling."""
-#    ami = "/opt/ami"
-    ami = "/home/djt/ami"
+    ami = "/opt/ami"
+#    ami = "/home/djt/ami"
     casa = '/opt/soft/builds/casapy-active'
     output_dir = "/home/ts3e11/ami_results"
 #    log_dir = '/tmp/autocruncher'
     log_dir = output_dir
-    nthreads = 6
+    nthreads = 4
 
 def main(options):
+    """Define processing logic and fire up the watcher"""
     watchdir = os.path.join(options.ami, 'LA/data')
-
-    wm = pyinotify.WatchManager()
     pool = multiprocessing.Pool(options.nthreads)
 
+#    def simply_process_rawfile(file_path):
+#        summary = process_rawfile(file_path)
+#        processed_callback(summary)
     def asynchronously_process_rawfile(file_path, mp_pool):
-#    summary = process_rawfile(file_path)
-#    processed_callback(summary)
+        """Wrapper function that runs 'process_rawfile' asynchronously via pool"""
         mp_pool.apply_async(process_rawfile,
               [file_path, options.ami, options.casa, options.output_dir],
               callback=processed_callback)
@@ -40,9 +46,8 @@ def main(options):
     handler = RsyncNewFileHandler(nthreads=options.nthreads,
                                   file_predicate=is_rawfile,
                                   file_processor=bound_asyncprocessor)
-
+    wm = pyinotify.WatchManager()
     notifier = pyinotify.Notifier(wm, handler)
-
     wm.add_watch(watchdir, handler.mask, rec=True)
     log_preamble(options, watchdir)
     notifier.loop()
@@ -56,6 +61,7 @@ def is_rawfile(filename):
     return False
 
 def process_rawfile(filename, ami_dir, casa_dir, output_dir):
+    """A data reduction subroutine (specific to user's application)."""
     rawfile = os.path.basename(filename)
     reduce = ami.Reduce(ami_dir)
     groupname = rawfile.split('-')[0]
@@ -72,38 +78,9 @@ def process_rawfile(filename, ami_dir, casa_dir, output_dir):
     return "Successfully processed " + filename
 
 def processed_callback(summary):
+    """Used to return the 'job complete' log message in the master thread."""
     logger.info('*** Job complete: ' + summary)
 
-class RsyncNewFileHandler(pyinotify.ProcessEvent):
-    """Identifies new rsync'ed files and passes their path for processing.
-
-    rsync creates temporary files with a `.` prefix and random 6 letter suffix,
-    then renames these to the original filename when the transfer is complete.
-    To reliably catch (only) new transfers while coping with this file-shuffling,
-    we must do a little bit of tedious file tracking, using
-    the internal dict `tempfiles`.
-    Note we only track those files satisfying the condition
-    ``file_predicate(basename)==True``.
-
-    """
-    def my_init(self, nthreads, file_predicate, file_processor):
-        self.mask = pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO
-        self.tempfiles = {}
-        self.predicate = file_predicate
-        self.process = file_processor
-
-    def process_IN_CREATE(self, event):
-        original_filename = os.path.splitext(event.name[1:])[0]
-        if self.predicate(original_filename):
-            logger.debug("Transfer started, tempfile at:\n\t%s\n",
-                         event.pathname)
-            self.tempfiles[original_filename] = event.pathname
-
-    def process_IN_MOVED_TO(self, event):
-        if event.name in self.tempfiles:
-            self.tempfiles.pop(event.name)
-            logger.info('Sending for processing: %s', event.pathname)
-            self.process(event.pathname)
 
 def log_preamble(options, watchdir):
     logger.info("***********")
@@ -115,6 +92,12 @@ def log_preamble(options, watchdir):
     logger.info("***********")
 
 def setup_logging(options):
+    """Set up basic (INFO level) and debug logfiles
+
+    These should list successful reductions, and any errors encountered.
+    We also copy the basic log to STDOUT, but it is expected that
+    the monitor script will be daemonised / run in a screen in the background.
+    """
     if not os.path.isdir(options.log_dir):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
