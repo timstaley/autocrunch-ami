@@ -7,7 +7,7 @@ with open('requirements.txt') as f:
 
 setup(
     name="autocrunch",
-    version="0.1",
+    version="0.2",
     packages=['autocrunch'],
     description="Example of using pyinotify to automatically process incoming files.",
     author="Tim Staley",
