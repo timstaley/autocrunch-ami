@@ -85,7 +85,7 @@ def setup_logging(options):
     if not os.path.isdir(options.log_dir):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
-    date_fmt = "%a %d %H:%M:%S"
+    date_fmt = "%y-%m-%d (%a) %H:%M:%S"
     std_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s', date_fmt)
     debug_formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s', date_fmt)
 
