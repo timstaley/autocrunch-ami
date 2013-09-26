@@ -1,22 +1,17 @@
 #!/usr/bin/env python
-
+"""An integration test to ensure that the ami_quicklook routine is working"""
 import os
 import logging
 import sys
 import multiprocessing
-import ami
-import drivecasa
-from autocrunch import process_rawfile
+from autocrunch import ami_rawfile_quicklook
 
 logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
                         level=logging.DEBUG)
 
-#watchdir = '/opt/ami/LA/data'
-#default_ami_dir = '/opt/ami'    
-#default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-34.0.19988-002-64b')
-default_output_dir = os.path.expanduser("/home/ts3e11/ami_results")
+default_output_dir = os.path.expanduser("/home/ts3e11/ami_test")
 default_ami_dir = '/data2/ami'
-default_casa_dir = os.path.expanduser('/opt/soft/builds/casapy-33.0.16856-002-64b')
+default_casa_dir = '/opt/soft/builds/casapy-active'
 nthreads = 4
 
 def processed_callback(summary):
@@ -35,7 +30,7 @@ if __name__ == "__main__":
     pool = multiprocessing.Pool(2)
 #    process_dataset(test_groups)
 #    result = pool.apply_async(process_dataset, [test_groups])
-    process_rawfile('SWIFT_541371-121212.raw',
+    ami_rawfile_quicklook('SWIFT_541371-121212.raw',
                     default_ami_dir,
                     default_casa_dir,
                     default_output_dir)

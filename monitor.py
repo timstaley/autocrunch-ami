@@ -13,9 +13,7 @@ import optparse
 from functools import partial
 import pyinotify
 from autocrunch.watch_handlers import RsyncNewFileHandler
-from autocrunch import process_rawfile
-import ami
-import drivecasa
+from autocrunch import ami_rawfile_quicklook
 
 logger = logging.getLogger()
 
@@ -39,7 +37,7 @@ def main(options):
 #        processed_callback(summary)
     def asynchronously_process_rawfile(file_path, mp_pool):
         """Wrapper function that runs 'process_rawfile' asynchronously via pool"""
-        mp_pool.apply_async(process_rawfile,
+        mp_pool.apply_async(ami_rawfile_quicklook,
               [file_path, options.ami, options.casa, options.output_dir],
               callback=processed_callback)
 

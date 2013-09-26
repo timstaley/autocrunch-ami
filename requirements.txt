@@ -1,1 +1,4 @@
 pyinotify
+drive-ami==0.3.0
+drive-casa==0.3.0
+
