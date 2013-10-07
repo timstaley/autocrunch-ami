@@ -15,7 +15,7 @@ class RsyncNewFileHandler(pyinotify.ProcessEvent):
     ``file_predicate(basename)==True``.
 
     """
-    def my_init(self, nthreads, file_predicate, file_processor):
+    def my_init(self, file_predicate, file_processor):
         self.mask = pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO
         self.tempfiles = {}
         self.predicate = file_predicate

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     pool = multiprocessing.Pool(2)
 #    process_dataset(test_groups)
 #    result = pool.apply_async(process_dataset, [test_groups])
-    ami_rawfile_quicklook('SWIFT_541371-121212.raw',
+    ami_rawfile_quicklook('DEL2013-130927.raw',
                     default_ami_dir,
                     default_casa_dir,
                     default_output_dir)

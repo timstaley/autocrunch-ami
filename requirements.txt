@@ -1,4 +1,4 @@
 pyinotify
-drive-ami==0.3.1
-drive-casa==0.3.0
+drive-ami==0.3.2
+drive-casa==0.3.1
 

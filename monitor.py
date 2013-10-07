@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+activate_this = '/home/ts3e11/.virtualenvs/autocrunch/bin/activate_this.py'
+execfile(activate_this, dict(__file__=activate_this))
+
 """A working (and used!) example of using pyinotify to trigger data reduction.
 
 A multiprocessing pool of thread workers is used to perform the reduction in
@@ -19,7 +22,7 @@ logger = logging.getLogger()
 
 class options():
     """Dummy class serving as a placeholder for optparse handling."""
-    ami = "/data1/ami"
+    ami = "/data2/ami"
 #    ami = "/home/djt/ami"
     casa = '/opt/soft/builds/casapy-active'
     output_dir = "/home/ts3e11/ami_results"
@@ -32,9 +35,9 @@ def main(options):
     watchdir = os.path.join(options.ami, 'LA/data')
     pool = multiprocessing.Pool(options.nthreads)
 
-#    def simply_process_rawfile(file_path):
-#        summary = process_rawfile(file_path)
-#        processed_callback(summary)
+    def simply_process_rawfile(file_path):
+        summary = ami_rawfile_quicklook(file_path, options.ami, options.casa, options.output_dir)
+        processed_callback(summary)
     def asynchronously_process_rawfile(file_path, mp_pool):
         """Wrapper function that runs 'process_rawfile' asynchronously via pool"""
         mp_pool.apply_async(ami_rawfile_quicklook,
@@ -42,9 +45,9 @@ def main(options):
               callback=processed_callback)
 
     bound_asyncprocessor = partial(asynchronously_process_rawfile, mp_pool=pool)
-    handler = RsyncNewFileHandler(nthreads=options.nthreads,
-                                  file_predicate=is_rawfile,
-                                  file_processor=bound_asyncprocessor)
+    handler = RsyncNewFileHandler(file_predicate=is_rawfile,
+                                  file_processor=simply_process_rawfile)
+#                                  file_processor= bound_asyncprocessor)
     wm = pyinotify.WatchManager()
     notifier = pyinotify.Notifier(wm, handler)
     wm.add_watch(watchdir, handler.mask, rec=True)
