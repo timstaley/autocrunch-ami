@@ -46,8 +46,8 @@ def main(options):
 
     bound_asyncprocessor = partial(asynchronously_process_rawfile, mp_pool=pool)
     handler = RsyncNewFileHandler(file_predicate=is_rawfile,
-                                  file_processor=simply_process_rawfile)
-#                                  file_processor= bound_asyncprocessor)
+#                                  file_processor=simply_process_rawfile)
+                                  file_processor= bound_asyncprocessor)
     wm = pyinotify.WatchManager()
     notifier = pyinotify.Notifier(wm, handler)
     wm.add_watch(watchdir, handler.mask, rec=True)
