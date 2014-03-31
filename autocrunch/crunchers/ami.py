@@ -4,7 +4,7 @@ import drivecasa
 import os
 
 ami_clean_args = {
-          "spw": '0:3~7',
+          "spw": '0:0~5',
           "imsize": [512, 512],
           "cell": ['5.0arcsec'],
           "pbcor": False,
@@ -51,7 +51,7 @@ def ami_rawfile_quicklook(filename, ami_dir, casa_dir, output_dir):
                                 casa_dir)
         casa.run_script(casa_script, raise_on_severe=True)
 
-    except (IOError, ValueError, RuntimeError) as e:
+    except Exception as e:
         error_message = ("Hit exception reducing file: %s, exception reads:\n%s\n"
                          % (rawfile, e))
         return error_message

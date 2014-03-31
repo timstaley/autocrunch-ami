@@ -25,7 +25,7 @@ class options():
     ami = "/data2/ami"
 #    ami = "/home/djt/ami"
     casa = '/opt/soft/builds/casapy-active'
-    output_dir = "/home/ts3e11/ami_results"
+    output_dir = "/home/ts3e11/autocrunch_test"
 #    log_dir = '/tmp/autocruncher'
     log_dir = output_dir
     nthreads = 4
@@ -87,8 +87,11 @@ def setup_logging(options):
         os.makedirs(options.log_dir)
     log_filename = os.path.join(options.log_dir, 'autocruncher_log')
     date_fmt = "%y-%m-%d (%a) %H:%M:%S"
-    std_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s', date_fmt)
-    debug_formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s', date_fmt)
+    std_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s',
+                                      date_fmt)
+    debug_formatter = logging.Formatter(
+                            '%(asctime)s:%(name)s:%(levelname)s:%(message)s',
+                            date_fmt)
 
     fhandler = logging.handlers.RotatingFileHandler(log_filename,
                             maxBytes=5e5, backupCount=10)
