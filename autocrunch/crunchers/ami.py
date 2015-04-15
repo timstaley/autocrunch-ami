@@ -50,8 +50,8 @@ def ami_rawfile_quicklook(filename, ami_dir, casa_dir, output_dir):
                                 image_path=dirty_maps.image,
                                 out_dir=group_fits_outdir,
                                 overwrite=True)
-        casa = drivecasa.Casapy(casa_logfile,
-                                casa_dir)
+        casa = drivecasa.Casapy(casa_logfile=casa_logfile,
+                                casa_dir=casa_dir)
         casa.run_script(casa_script, raise_on_severe=True)
 
     except Exception as e:
