@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-activate_this = '/home/ts3e11/.virtualenvs/autocrunch/bin/activate_this.py'
+activate_this = '/home/ts3e11/.virtualenvs/autocruncher/bin/activate_this.py'
 execfile(activate_this, dict(__file__=activate_this))
 
-"""A working (and used!) example of using pyinotify to trigger data reduction.
+"""
+A working (and used!) example of using pyinotify to trigger data reduction.
 
 A multiprocessing pool of thread workers is used to perform the reduction in
 an asynchronous and parallel fashion.
@@ -12,7 +13,6 @@ import sys
 import multiprocessing
 import logging, logging.handlers
 import os
-import optparse
 from functools import partial
 import pyinotify
 from autocrunch.watch_handlers import RsyncNewFileHandler
@@ -24,7 +24,7 @@ class options():
     """Dummy class serving as a placeholder for optparse handling."""
     ami = "/data2/ami"
 #    ami = "/home/djt/ami"
-    casa = '/opt/soft/builds/casapy-active'
+    casa = None
     output_dir = "/home/ts3e11/autocrunch_test"
 #    log_dir = '/tmp/autocruncher'
     log_dir = output_dir

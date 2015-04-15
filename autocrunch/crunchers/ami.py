@@ -2,6 +2,9 @@ import driveami
 import driveami.keys as amikeys
 import drivecasa
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 ami_clean_args = {
           "spw": '0:0~5',
@@ -29,7 +32,7 @@ def ami_rawfile_quicklook(filename, ami_dir, casa_dir, output_dir):
         obs_info = driveami.process_rawfile(rawfile, group_ami_outdir, reduce)
         image_casa_outdir = os.path.join(group_casa_outdir,
                                          obs_info[amikeys.obs_name])
-        casa_logfile = os.path.join(image_casa_outdir, 'casalog.txt')
+        casa_logfile = os.path.join(group_casa_outdir, 'casalog.txt')
         casa_script = []
         vis = drivecasa.commands.import_uvfits(casa_script,
                                  uvfits_path=obs_info[amikeys.target_uvfits],
@@ -44,7 +47,7 @@ def ami_rawfile_quicklook(filename, ami_dir, casa_dir, output_dir):
                  out_dir=image_casa_outdir,
                  overwrite=True)
         dirty_maps_fits_image = drivecasa.commands.export_fits(casa_script,
-                                image_path=dirty_maps['image'],
+                                image_path=dirty_maps.image,
                                 out_dir=group_fits_outdir,
                                 overwrite=True)
         casa = drivecasa.Casapy(casa_logfile,
@@ -54,6 +57,7 @@ def ami_rawfile_quicklook(filename, ami_dir, casa_dir, output_dir):
     except Exception as e:
         error_message = ("Hit exception reducing file: %s, exception reads:\n%s\n"
                          % (rawfile, e))
+        logger.exception(e)
         return error_message
 
     return "Successfully processed " + filename
