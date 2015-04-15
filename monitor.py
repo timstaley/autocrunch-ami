@@ -24,7 +24,7 @@ class options():
     """Dummy class serving as a placeholder for optparse handling."""
     ami = "/data2/ami"
 #    ami = "/home/djt/ami"
-    casa = None
+    casa = '/opt/soft/builds/casa-release-4.3.0-el6'
     output_dir = "/home/ts3e11/autocrunch_test"
 #    log_dir = '/tmp/autocruncher'
     log_dir = output_dir
@@ -36,7 +36,8 @@ def main(options):
     pool = multiprocessing.Pool(options.nthreads)
 
     def simply_process_rawfile(file_path):
-        summary = ami_rawfile_quicklook(file_path, options.ami, options.casa, options.output_dir)
+        summary = ami_rawfile_quicklook(
+            file_path, options.ami, options.casa, options.output_dir)
         processed_callback(summary)
     def asynchronously_process_rawfile(file_path, mp_pool):
         """Wrapper function that runs 'process_rawfile' asynchronously via pool"""

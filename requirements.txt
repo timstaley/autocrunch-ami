@@ -1,3 +1,4 @@
+pexpect==2.4
 pyinotify
 drive-casa
 astropy
